@@ -10,5 +10,8 @@ public class Session : BaseEntity
     public int BranchId { get; set; }
     public Branch Branch { get; set; } = null!;
     
+    public int SportId { get; set; }
+    public Sport Sport { get; set; } = null!;
+    
     public ICollection<Reservation> Reservations { get; set; } = new List<Reservation>();
 }

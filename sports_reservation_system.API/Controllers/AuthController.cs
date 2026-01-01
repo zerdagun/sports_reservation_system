@@ -1,6 +1,6 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using sports_reservation_system.Business.Common;
+using sports_reservation_system.Business.DTOs.AuthDtos;
 using sports_reservation_system.Business.DTOs.UserDtos;
 using sports_reservation_system.Business.Services;
 
@@ -10,31 +10,38 @@ namespace sports_reservation_system.API.Controllers;
 [ApiController]
 public class AuthController : ControllerBase
 {
-    private readonly IUserService _userService;
+    private readonly IAuthService _authService;
 
-    public AuthController(IUserService userService)
+    public AuthController(IAuthService authService)
     {
-        _userService = userService;
+        _authService = authService;
     }
 
-    // POST: api/auth/login
+    [HttpPost("register")]
+    public async Task<IActionResult> Register([FromBody] RegisterDto registerDto)
+    {
+        try
+        {
+            var result = await _authService.RegisterAsync(registerDto);
+            return Ok(new { Message = result });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { Message = ex.Message });
+        }
+    }
+
     [HttpPost("login")]
-    [AllowAnonymous] // Login için authentication gerekmez
     public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
     {
-        var loginResponse = await _userService.LoginAsync(loginDto);
-        var response = ApiResponse<LoginResponseDto>.SuccessResponse(loginResponse, "Giriş başarılı.");
-        return Ok(response);
-    }
-
-    // POST: api/auth/register
-    [HttpPost("register")]
-    [AllowAnonymous] // Kayıt için authentication gerekmez
-    public async Task<IActionResult> Register([FromBody] CreateUserDto createUserDto)
-    {
-        var user = await _userService.AddUserAsync(createUserDto);
-        var response = ApiResponse<UserDto>.SuccessResponse(user, "Kullanıcı başarıyla kaydedildi.");
-        return StatusCode(201, response);
+        try
+        {
+            var result = await _authService.LoginAsync(loginDto);
+            return Ok(ApiResponse<LoginResponseDto>.SuccessResponse(result, "Giriş başarılı."));
+        }
+        catch (Exception ex)
+        {
+            return Unauthorized(ApiResponse<object>.ErrorResponse(ex.Message));
+        }
     }
 }
-

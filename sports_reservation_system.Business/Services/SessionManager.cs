@@ -11,17 +11,20 @@ public class SessionManager : ISessionService
 {
     private readonly IGenericRepository<Session> _sessionRepository;
     private readonly IGenericRepository<Branch> _branchRepository;
+    private readonly IGenericRepository<Sport> _sportRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
     public SessionManager(
         IGenericRepository<Session> sessionRepository,
         IGenericRepository<Branch> branchRepository,
+        IGenericRepository<Sport> sportRepository,
         IUnitOfWork unitOfWork,
         IMapper mapper)
     {
         _sessionRepository = sessionRepository;
         _branchRepository = branchRepository;
+        _sportRepository = sportRepository;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
@@ -30,6 +33,7 @@ public class SessionManager : ISessionService
     {
         var sessions = await _sessionRepository.GetAll()
             .Include(s => s.Branch)
+            .Include(s => s.Sport)
             .ToListAsync();
 
         return _mapper.Map<IEnumerable<SessionDto>>(sessions);
@@ -39,6 +43,7 @@ public class SessionManager : ISessionService
     {
         var session = await _sessionRepository.GetAll()
             .Include(s => s.Branch)
+            .Include(s => s.Sport)
             .FirstOrDefaultAsync(s => s.Id == id);
 
         if (session == null)
@@ -54,13 +59,20 @@ public class SessionManager : ISessionService
         if (branch == null)
             throw new KeyNotFoundException($"ID'si {sessionDto.BranchId} olan şube bulunamadı.");
 
+        // Sport kontrolü
+        var sport = await _sportRepository.GetByIdAsync(sessionDto.SportId);
+        if (sport == null)
+            throw new KeyNotFoundException($"ID'si {sessionDto.SportId} olan spor bulunamadı.");
+
         var session = _mapper.Map<Session>(sessionDto);
+        session.CreatedAt = DateTime.UtcNow;
         await _sessionRepository.AddAsync(session);
         await _unitOfWork.CommitAsync();
 
-        // Branch bilgisini dahil ederek döndür
+        // Branch ve Sport bilgisini dahil ederek döndür
         session = await _sessionRepository.GetAll()
             .Include(s => s.Branch)
+            .Include(s => s.Sport)
             .FirstOrDefaultAsync(s => s.Id == session.Id) ?? session;
 
         return _mapper.Map<SessionDto>(session);

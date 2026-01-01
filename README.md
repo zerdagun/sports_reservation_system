@@ -144,186 +144,27 @@ https://localhost:5001/swagger
 | PUT | `/api/minimal/branches/{id}` | Şube güncelle | ✅ | Admin |
 | DELETE | `/api/minimal/branches/{id}` | Şube sil | ✅ | Admin |
 
+### Sports (Sporlar)
+
+| Method | Endpoint | Açıklama | Auth | Role |
+|--------|----------|----------|------|------|
+| GET | `/api/sports` | Tüm sporları listele | ✅ | - |
+| GET | `/api/sports/{id}` | Spor detayı | ✅ | - |
+| POST | `/api/sports` | Yeni spor ekle | ✅ | Admin |
+| PUT | `/api/sports/{id}` | Spor güncelle | ✅ | Admin |
+| DELETE | `/api/sports/{id}` | Spor sil (soft delete) | ✅ | Admin |
+
+#### Minimal API Endpoints (Sports)
+| Method | Endpoint | Açıklama | Auth | Role |
+|--------|----------|----------|------|------|
+| GET | `/api/minimal/sports` | Tüm sporları listele | ✅ | - |
+| GET | `/api/minimal/sports/{id}` | Spor detayı | ✅ | - |
+| POST | `/api/minimal/sports` | Yeni spor ekle | ✅ | Admin |
+| PUT | `/api/minimal/sports/{id}` | Spor güncelle | ✅ | Admin |
+| DELETE | `/api/minimal/sports/{id}` | Spor sil | ✅ | Admin |
+
 ### Users (Kullanıcılar)
-
-| Method | Endpoint | Açıklama | Auth | Role |
-|--------|----------|----------|------|------|
-| GET | `/api/users` | Tüm kullanıcıları listele | ✅ | Admin |
-| GET | `/api/users/{id}` | Kullanıcı detayı | ✅ | - |
-| PUT | `/api/users/{id}` | Kullanıcı güncelle | ✅ | - |
-| DELETE | `/api/users/{id}` | Kullanıcı sil | ✅ | Admin |
-
-### Sessions (Seanslar)
-
-| Method | Endpoint | Açıklama | Auth | Role |
-|--------|----------|----------|------|------|
-| GET | `/api/sessions` | Tüm seansları listele | ✅ | - |
-| GET | `/api/sessions/{id}` | Seans detayı | ✅ | - |
-| POST | `/api/sessions` | Yeni seans ekle | ✅ | Admin |
-| PUT | `/api/sessions/{id}` | Seans güncelle | ✅ | Admin |
-| DELETE | `/api/sessions/{id}` | Seans sil | ✅ | Admin |
-
-### Reservations (Rezervasyonlar)
-
-| Method | Endpoint | Açıklama | Auth | Role |
-|--------|----------|----------|------|------|
-| GET | `/api/reservations` | Tüm rezervasyonları listele | ✅ | Admin |
-| GET | `/api/reservations/{id}` | Rezervasyon detayı | ✅ | - |
-| POST | `/api/reservations` | Yeni rezervasyon oluştur | ✅ | - |
-| PUT | `/api/reservations/{id}` | Rezervasyon güncelle | ✅ | - |
-| DELETE | `/api/reservations/{id}` | Rezervasyon sil | ✅ | - |
-
-## 🔐 Authentication
-
-API, JWT (JSON Web Token) tabanlı kimlik doğrulama kullanır.
-
-### Login İşlemi
-
-```http
-POST /api/auth/login
-Content-Type: application/json
-
-{
-  "email": "admin@example.com",
-  "password": "Admin123!"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Giriş başarılı.",
-  "data": {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "user": {
-      "id": 1,
-      "fullName": "Admin User",
-      "email": "admin@example.com",
-      "role": "Admin"
-    },
-    "expiresAt": "2024-01-02T12:00:00Z"
-  }
-}
-```
-
-### Token Kullanımı
-
-Tüm korumalı endpoint'lere istek gönderirken `Authorization` header'ında token'ı gönderin:
-
-```http
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
-## 📦 API Response Formatı
-
-Tüm API yanıtları standart formatta döner:
-
-```json
-{
-  "success": true,
-  "message": "İşlem başarılı",
-  "data": {
-    // Response verisi burada
-  }
-}
-```
-
-### Hata Durumları
-
-**400 Bad Request:**
-```json
-{
-  "success": false,
-  "message": "Geçersiz istek parametreleri",
-  "data": null
-}
-```
-
-**404 Not Found:**
-```json
-{
-  "success": false,
-  "message": "ID'si 1 olan şube bulunamadı.",
-  "data": null
-}
-```
-
-**401 Unauthorized:**
-```json
-{
-  "success": false,
-  "message": "Email veya şifre hatalı.",
-  "data": null
-}
-```
-
-**409 Conflict:**
-```json
-{
-  "success": false,
-  "message": "Bu email adresi zaten kullanılıyor.",
-  "data": null
-}
-```
-
-## 💡 Örnek Kullanımlar
-
-### 1. Kullanıcı Kaydı
-
-```http
-POST /api/auth/register
-Content-Type: application/json
-
-{
-  "fullName": "Yeni Kullanıcı",
-  "email": "yeni@example.com",
-  "password": "Password123!",
-  "role": "User"
-}
-```
-
-### 2. Şube Ekleme (Admin)
-
-```http
-POST /api/branches
-Authorization: Bearer {token}
-Content-Type: application/json
-
-{
-  "name": "Yeni Şube",
-  "description": "Açıklama"
-}
-```
-
-### 3. Seans Oluşturma (Admin)
-
-```http
-POST /api/sessions
-Authorization: Bearer {token}
-Content-Type: application/json
-
-{
-  "startTime": "2024-01-15T10:00:00Z",
-  "durationMinutes": 60,
-  "quota": 20,
-  "price": 100,
-  "branchId": 1
-}
-```
-
-### 4. Rezervasyon Oluşturma
-
-```http
-POST /api/reservations
-Authorization: Bearer {token}
-Content-Type: application/json
-
-{
-  "userId": 1,
-  "sessionId": 1
-}
-```
+...
 
 ## 🗄 Veritabanı Yapısı
 
@@ -331,7 +172,8 @@ Content-Type: application/json
 
 - **User**: Kullanıcı bilgileri
 - **Branch**: Spor tesisi şubeleri
-- **Session**: Spor seansları
+- **Sport**: Spor branşları (Futbol, Basketbol, Buz Pateni vb.)
+- **Session**: Spor seansları (Artık SportId ile ilişkilidir)
 - **Reservation**: Rezervasyonlar
 
 ### İlişkiler
@@ -339,6 +181,7 @@ Content-Type: application/json
 - User ↔ Reservation (1-N)
 - Session ↔ Reservation (1-N)
 - Branch ↔ Session (1-N)
+- Sport ↔ Session (1-N)
 
 ### Soft Delete
 
@@ -350,18 +193,18 @@ Uygulama ilk çalıştırıldığında otomatik olarak seed data eklenir:
 
 - **Admin User**: `admin@example.com` / `Admin123!`
 - **Test User**: `user@example.com` / `User123!`
+- **5 Spor**: (Buz Pateni, Futbol, Basketbol, Tenis, Yüzme)
 - **3 Şube** (Merkez, Kuzey, Güney)
-- **9 Seans** (Her şube için 3 seans)
+- **9 Seans** (Her şube için 3 seans - Rastgele sporlarla)
 - **3 Rezervasyon**
 
-## 📝 Logging
+## 📝 Logging (Serilog)
 
-Proje .NET'in built-in logging sistemini kullanır. Loglar şu kategorilerde tutulur:
+Proje **Serilog** ile gelişmiş loglama altyapısına sahiptir. Loglar hem **konsola** hem de **dosyaya** yazılır.
 
-- **Information**: Genel bilgilendirme
-- **Warning**: Uyarılar
-- **Error**: Hatalar
-- **Exception**: Exception detayları
+- **Dosya Yolu**: `/logs/log-{tarih}.txt`
+- **Format**: JSON structured logging
+- **Log Seviyeleri**: Information, Warning, Error, Fatal
 
 ## ✅ Özellikler
 
@@ -375,7 +218,7 @@ Proje .NET'in built-in logging sistemini kullanır. Loglar şu kategorilerde tut
 - ✅ Role-Based Access Control (Admin/User)
 - ✅ Soft Delete
 - ✅ Seed Data
-- ✅ Logging
+- ✅ Advanced Logging (Serilog)
 - ✅ Swagger/OpenAPI Dokümantasyonu
 - ✅ Entity Framework Core Migrations
 

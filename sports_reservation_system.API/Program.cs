@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Serilog;
 using sports_reservation_system.Data;
 using sports_reservation_system.Data.Repositories;
 using sports_reservation_system.Data.UnitOfWork;
@@ -14,11 +16,27 @@ using sports_reservation_system.Business.DTOs.BranchDtos;
 using sports_reservation_system.Business.DTOs.UserDtos;
 using sports_reservation_system.Business.DTOs.SessionDtos;
 using sports_reservation_system.Business.DTOs.ReservationDtos;
+using sports_reservation_system.Business.DTOs.SportDtos;
 using sports_reservation_system.API.Middleware;
+
+// --- Serilog Configuration ---
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(new ConfigurationBuilder()
+        .AddJsonFile("appsettings.json")
+        .Build())
+    .CreateLogger();
+
+try
+{
+    Log.Information("Uygulama başlatılıyor...");
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- 1. Veritabanı Ayarı ---
+// Serilog'u kullan
+builder.Host.UseSerilog();
+
+builder.Services.AddControllers();
+// --- 1. Veritabanı Ayarı (SQLite) ---
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -31,6 +49,7 @@ builder.Services.AddScoped<IBranchService, BranchManager>();
 builder.Services.AddScoped<IUserService, UserManager>();
 builder.Services.AddScoped<ISessionService, SessionManager>();
 builder.Services.AddScoped<IReservationService, ReservationManager>();
+builder.Services.AddScoped<ISportService, SportManager>();
 
 // --- 4. AutoMapper Ayarı ---
 builder.Services.AddAutoMapper(typeof(MappingProfile));
@@ -63,7 +82,37 @@ builder.Services.AddAuthorization();
 
 // --- 6. Swagger ve API Standartları ---
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Spor Rezervasyon Sistemi API", Version = "v1" });
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement()
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                },
+                Scheme = "oauth2",
+                Name = "Bearer",
+                In = ParameterLocation.Header,
+            },
+            new List<string>()
+        }
+    });
+});
+builder.Services.AddScoped<IAuthService, AuthManager>();
 
 var app = builder.Build();
 
@@ -242,4 +291,48 @@ reservationsGroup.MapDelete("/{id}", [Authorize] async (int id, IReservationServ
     return Results.NoContent();
 });
 
+// ========== SPORTS MINIMAL API ==========
+var sportsGroup = app.MapGroup("api/minimal/sports").WithTags("Sports (Minimal API)");
+sportsGroup.MapGet("/", [Authorize] async (ISportService service) =>
+{
+    var sports = await service.GetAllSportsAsync();
+    return Results.Ok(ApiResponse<IEnumerable<SportDto>>.SuccessResponse(sports, "Sporlar başarıyla getirildi."));
+});
+
+sportsGroup.MapGet("/{id}", [Authorize] async (int id, ISportService service) =>
+{
+    var sport = await service.GetSportByIdAsync(id);
+    if (sport == null)
+        return Results.NotFound(ApiResponse<SportDto>.ErrorResponse($"ID'si {id} olan spor bulunamadı."));
+    return Results.Ok(ApiResponse<SportDto>.SuccessResponse(sport, "Spor başarıyla getirildi."));
+});
+
+sportsGroup.MapPost("/", [Authorize(Roles = "Admin")] async (CreateSportDto dto, ISportService service) =>
+{
+    var sport = await service.AddSportAsync(dto);
+    return Results.Created($"/api/minimal/sports/{sport.Id}", ApiResponse<SportDto>.SuccessResponse(sport, "Spor başarıyla eklendi."));
+});
+
+sportsGroup.MapPut("/{id}", [Authorize(Roles = "Admin")] async (int id, UpdateSportDto dto, ISportService service) =>
+{
+    await service.UpdateSportAsync(id, dto);
+    return Results.Ok(ApiResponse<object>.SuccessResponse(null, "Spor başarıyla güncellendi."));
+});
+
+sportsGroup.MapDelete("/{id}", [Authorize(Roles = "Admin")] async (int id, ISportService service) =>
+{
+    await service.DeleteSportAsync(id);
+    return Results.NoContent();
+});
+
+Log.Information("Uygulama başarıyla başlatıldı!");
 app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Uygulama başlatılırken hata oluştu!");
+}
+finally
+{
+    Log.CloseAndFlush();
+}

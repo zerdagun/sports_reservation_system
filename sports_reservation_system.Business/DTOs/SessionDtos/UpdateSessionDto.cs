@@ -21,5 +21,8 @@ public class UpdateSessionDto
     [Required(ErrorMessage = "Fiyat zorunludur")]
     [Range(0, double.MaxValue, ErrorMessage = "Fiyat 0 veya pozitif olmalıdır")]
     public decimal Price { get; set; }
+
+    [Required(ErrorMessage = "Spor ID'si zorunludur")]
+    public int SportId { get; set; }
 }
 

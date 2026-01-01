@@ -98,6 +98,9 @@ namespace sports_reservation_system.Data.Migrations
                     b.Property<int>("Quota")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("SportId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime>("StartTime")
                         .HasColumnType("TEXT");
 
@@ -108,7 +111,39 @@ namespace sports_reservation_system.Data.Migrations
 
                     b.HasIndex("BranchId");
 
+                    b.HasIndex("SportId");
+
                     b.ToTable("Sessions");
+                });
+
+            modelBuilder.Entity("sports_reservation_system.Data.Entities.Sport", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Sports");
                 });
 
             modelBuilder.Entity("sports_reservation_system.Data.Entities.User", b =>
@@ -174,7 +209,15 @@ namespace sports_reservation_system.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("sports_reservation_system.Data.Entities.Sport", "Sport")
+                        .WithMany("Sessions")
+                        .HasForeignKey("SportId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Branch");
+
+                    b.Navigation("Sport");
                 });
 
             modelBuilder.Entity("sports_reservation_system.Data.Entities.Branch", b =>
@@ -185,6 +228,11 @@ namespace sports_reservation_system.Data.Migrations
             modelBuilder.Entity("sports_reservation_system.Data.Entities.Session", b =>
                 {
                     b.Navigation("Reservations");
+                });
+
+            modelBuilder.Entity("sports_reservation_system.Data.Entities.Sport", b =>
+                {
+                    b.Navigation("Sessions");
                 });
 
             modelBuilder.Entity("sports_reservation_system.Data.Entities.User", b =>

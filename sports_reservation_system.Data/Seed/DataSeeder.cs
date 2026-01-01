@@ -88,23 +88,78 @@ public static class DataSeeder
                 logger.LogInformation($"{branches.Count} şube eklendi.");
             }
 
+            // Sports seed (BUZ PATENİ dahil! ⛸️)
+            if (!await context.Sports.AnyAsync())
+            {
+                logger.LogInformation("Sporlar ekleniyor...");
+                var sports = new List<Sport>
+                {
+                    new Sport
+                    {
+                        Name = "Buz Pateni",
+                        Description = "Buz üzerinde yapılan patinaj sporu",
+                        IsActive = true,
+                        CreatedAt = DateTime.UtcNow
+                    },
+                    new Sport
+                    {
+                        Name = "Futbol",
+                        Description = "Halı saha futbol",
+                        IsActive = true,
+                        CreatedAt = DateTime.UtcNow
+                    },
+                    new Sport
+                    {
+                        Name = "Basketbol",
+                        Description = "Kapalı saha basketbol",
+                        IsActive = true,
+                        CreatedAt = DateTime.UtcNow
+                    },
+                    new Sport
+                    {
+                        Name = "Tenis",
+                        Description = "Açık ve kapalı kort tenis",
+                        IsActive = true,
+                        CreatedAt = DateTime.UtcNow
+                    },
+                    new Sport
+                    {
+                        Name = "Yüzme",
+                        Description = "Kapalı havuz yüzme",
+                        IsActive = true,
+                        CreatedAt = DateTime.UtcNow
+                    }
+                };
+
+                await context.Sports.AddRangeAsync(sports);
+                await context.SaveChangesAsync();
+                logger.LogInformation($"{sports.Count} spor eklendi.");
+            }
+
             // Sessions seed
             if (!await context.Sessions.AnyAsync())
             {
                 logger.LogInformation("Seanslar ekleniyor...");
                 var branches = await context.Branches.ToListAsync();
-                if (branches.Any())
+                var sports = await context.Sports.ToListAsync();
+                
+                if (branches.Any() && sports.Any())
                 {
                     var sessions = new List<Session>();
                     var random = new Random();
 
+                    // Her şube için farklı sporlardan seanslar oluştur
                     foreach (var branch in branches)
                     {
                         for (int i = 0; i < 3; i++)
                         {
+                            // Rastgele bir spor seç
+                            var randomSport = sports[random.Next(sports.Count)];
+                            
                             sessions.Add(new Session
                             {
                                 BranchId = branch.Id,
+                                SportId = randomSport.Id,
                                 StartTime = DateTime.UtcNow.AddDays(i + 1).AddHours(10 + i),
                                 DurationMinutes = 60,
                                 Quota = random.Next(10, 30),

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace sports_reservation_system.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialCreate_Sqlite : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -26,6 +26,24 @@ namespace sports_reservation_system.Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Branches", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Sports",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Name = table.Column<string>(type: "TEXT", nullable: false),
+                    Description = table.Column<string>(type: "TEXT", nullable: true),
+                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Sports", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -58,6 +76,7 @@ namespace sports_reservation_system.Data.Migrations
                     Quota = table.Column<int>(type: "INTEGER", nullable: false),
                     Price = table.Column<decimal>(type: "TEXT", nullable: false),
                     BranchId = table.Column<int>(type: "INTEGER", nullable: false),
+                    SportId = table.Column<int>(type: "INTEGER", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
                     IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
@@ -69,6 +88,12 @@ namespace sports_reservation_system.Data.Migrations
                         name: "FK_Sessions_Branches_BranchId",
                         column: x => x.BranchId,
                         principalTable: "Branches",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Sessions_Sports_SportId",
+                        column: x => x.SportId,
+                        principalTable: "Sports",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -116,6 +141,11 @@ namespace sports_reservation_system.Data.Migrations
                 name: "IX_Sessions_BranchId",
                 table: "Sessions",
                 column: "BranchId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Sessions_SportId",
+                table: "Sessions",
+                column: "SportId");
         }
 
         /// <inheritdoc />
@@ -132,6 +162,9 @@ namespace sports_reservation_system.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "Branches");
+
+            migrationBuilder.DropTable(
+                name: "Sports");
         }
     }
 }
